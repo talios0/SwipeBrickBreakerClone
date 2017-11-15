@@ -13,6 +13,7 @@ public class PlayerManager : MonoBehaviour {
     public List<GameObject> ballList;
     public float speed;
     private bool onGround = true;
+    Vector3 mousePos;
 
     private void Start()
     {
@@ -30,10 +31,13 @@ public class PlayerManager : MonoBehaviour {
 
     void CheckLaunch()
     {
+        mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         if (Input.GetButton("Fire1") && !fired)
         {
             fired = true;
-            float angle = Vector2.Angle(new Vector2(ballList[0].transform.position.x, ballList[0].transform.position.y), new Vector2(Input.mousePosition.x,Input.mousePosition.y));
+            float angle = Vector2.Angle(ballList[0].transform.position, new Vector2(mousePos.x, mousePos.y));
+            angle = 180 - angle;
+            Debug.Log(angle);
             for (int x = 0; x < currentBalls; x++)
             {
                 GameObject ball = Instantiate(Ball);
@@ -43,10 +47,16 @@ public class PlayerManager : MonoBehaviour {
             }
             foreach (GameObject g in ballList)
             {
-                g.transform.LookAt(Input.mousePosition);
                 g.GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Kinematic;
-                g.GetComponent<Rigidbody2D>().velocity = new Vector2(0,speed);
+                g.GetComponent<Rigidbody2D>().velocity = new Vector2(Mathf.Sin(angle)*speed,Mathf.Cos(angle)*speed);
             }
         }
     }
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawRay(ballList[0].transform.position, mousePos);
+        Gizmos.DrawRay(ballList[0].transform.position, new Vector3(ballList[0].transform.position.x, ballList[0].transform.position.y + 250, ballList[0].transform.position.z));
+    }
+
 }
