@@ -4,11 +4,22 @@ using UnityEngine;
 
 public class PlayerManager : MonoBehaviour {
 
+    //Delete extra balls when they come to a stop
+    //Reset startGame bool in the first ball
+    //Proceeed to next level
+    //Allow the user to launch again
+    //Update ball count
+    //Number on bricks
+    //Color on bricks
+    //GameOver animation
+    //Touch angle visual
+
     [Range(100,1000)]
     public int maxBalls;
     public int currentBalls;
     public GameObject Ball;
     private bool fired = false;
+    public float waitTime;
 
     public List<GameObject> ballList;
     public float speed;
@@ -32,12 +43,12 @@ public class PlayerManager : MonoBehaviour {
     void CheckLaunch()
     {
         mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        if (Input.GetButton("Fire1") && !fired)
+        if (Input.GetButtonUp("Fire1") && !fired)
         {
+            Vector2 dir = mousePos - ballList[0].transform.position;
+            dir.Normalize();
+
             fired = true;
-            float angle = Vector2.Angle(ballList[0].transform.position, new Vector2(mousePos.x, mousePos.y));
-            angle = 180 - angle;
-            Debug.Log(angle);
             for (int x = 0; x < currentBalls; x++)
             {
                 GameObject ball = Instantiate(Ball);
@@ -45,13 +56,29 @@ public class PlayerManager : MonoBehaviour {
                 ball.transform.position = ballList[0].transform.position;
                 ballList.Add(ball);
             }
-            foreach (GameObject g in ballList)
-            {
-                g.GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Kinematic;
-                g.GetComponent<Rigidbody2D>().velocity = new Vector2(Mathf.Sin(angle)*speed,Mathf.Cos(angle)*speed);
-            }
+            StartCoroutine(LaunchBall(dir));
         }
     }
+
+    IEnumerator LaunchBall(Vector2 dir)
+    {
+        for (int x= 0; x<ballList.Count+1; x++)
+        {
+            if (x < ballList.Count)
+            {
+                ballList[x].GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Dynamic;
+                ballList[x].GetComponent<Rigidbody2D>().velocity = dir * speed;
+            }
+            if (x != 0)
+            {
+                ballList[x - 1].GetComponent<CollisionCheck>().startGame = false;
+            }
+
+            yield return new WaitForSeconds(waitTime);
+        }
+
+    }
+
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.red;
