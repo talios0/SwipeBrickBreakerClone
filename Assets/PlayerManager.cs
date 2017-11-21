@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerManager : MonoBehaviour {
-    //Number on bricks
+    //EXTRA STUFF
     //Color on bricks
     //GameOver animation
     //Touch angle visual
@@ -22,7 +22,7 @@ public class PlayerManager : MonoBehaviour {
     public float speed;
     private bool onGround = true;
     Vector3 mousePos;
-
+    private bool enumerating =false;
     private bool firstStart = true;
 
     private bool nextLevel = true;
@@ -30,9 +30,7 @@ public class PlayerManager : MonoBehaviour {
     private void Start()
     {
         ballList = new List<GameObject>();
-        ballList.Add(Instantiate(Ball));
-        ballList[0].transform.parent = transform;
-        ballList[0].transform.position = new Vector2(0, -4.716731f);
+        ballList.Add(Instantiate(Ball, new Vector2(0, -4.65f), Quaternion.identity,transform));
         ballList[0].GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Kinematic;
     }
 
@@ -51,7 +49,7 @@ public class PlayerManager : MonoBehaviour {
     bool CheckFinished()
     {
         int ballListLength = ballList.Count; //BallList.Count will change if it still has balls in the list other than the first one.
-        if (ballList.Count > 1)
+        if (ballList.Count > 1 && !enumerating)
         {
             for (int x = 0; x < ballList.Count; x++)
             {
@@ -111,39 +109,30 @@ public class PlayerManager : MonoBehaviour {
             dir.Normalize();
 
             fired = true;
-            //Debug.Log(currentBalls);
-            for (int x = 0; x < currentBalls; x++)
-            {
-                //Debug.Log(x);
-                GameObject ball = Instantiate(Ball);
-                ball.transform.parent = ballList[0].transform.parent;
-                ball.transform.position = ballList[0].transform.position;
-                ballList.Add(ball);
-            }
-            StartCoroutine(LaunchBall(dir));
-
+            enumerating = true;
+            StartCoroutine(LaunchBall(dir, ballList[0].transform.position));
         }
     }
 
-    IEnumerator LaunchBall(Vector2 dir)
+    IEnumerator LaunchBall(Vector2 dir,Vector2 startPos)
     {
-        for (int x= 0; x<ballList.Count+1; x++)
+        for (int x = 0; x < currentBalls+1; x++)
         {
-            if (x < ballList.Count)
+            Debug.Log(x);
+            if (x != 0)
             {
-                //Debug.Log(x);
-                ballList[x].GetComponent<CollisionCheck>().SetLanded(false);
-                ballList[x].name = "Ball: " + x;
-                ballList[x].GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Dynamic;
-                ballList[x].GetComponent<Rigidbody2D>().velocity = dir * speed;
+                GameObject ball = Instantiate(Ball, new Vector3(startPos.x, -4.65f, 0), Quaternion.identity, transform);
+                ballList.Add(ball);
+                ball.GetComponent<CollisionCheck>().ID = x;
             }
-            if (x!= 0)
-            {
-                ballList[x-1].GetComponent<CollisionCheck>().startGame = false;
-            }
+            ballList[x].GetComponent<CollisionCheck>().SetLanded(false);
+            ballList[x].name = "Ball: " + x;
+            ballList[x].GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Dynamic;
+            ballList[x].GetComponent<Rigidbody2D>().velocity = dir * speed;
+            Debug.Log(ballList[x]);
             yield return new WaitForSeconds(waitTime);
-            
         }
+        enumerating = false;
 
     }
 
