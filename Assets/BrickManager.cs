@@ -11,9 +11,11 @@ public class BrickManager : MonoBehaviour {
     public Text Score;
     public Text HiScore;
 
+    private GameObject playerManager;
     public GameObject Brick;
     public GameObject Bricks;
     private List<GameObject> Levels;
+    private List<GameObject> UpgradeObjects;
     public float[] gridCoords;
     public float yDistance;
     public float moveTime;
@@ -27,7 +29,15 @@ public class BrickManager : MonoBehaviour {
     private float moveAmount;
     public int maxLocationTries;
 
-    void NextLevel()
+    public GameObject ballUpgrade;
+
+
+    public int GetScore()
+    {
+        return currentScore;
+    }
+
+    public void NextLevel()
     {
         int numOfBlocks;
         if (int.TryParse(Score.text, out currentScore))
@@ -54,14 +64,28 @@ public class BrickManager : MonoBehaviour {
             numOfBlocks = Random.Range(1, 2);
         
         Vector2[] blockPos = CalculateBlockPosition(numOfBlocks);
-        
-        Debug.Log("Done processing block positions");
+        int random = Random.Range(0, gridCoords.Length-1);
+        Vector2 bonusPos = new Vector2(gridCoords[random],yDistance);
+        //Debug.Log(bonusPos);
+        //Debug.Log("Done processing block positions");
         foreach (GameObject g in Levels)
         {
             g.transform.position -= new Vector3(0, yDistance, 0);
         }
+        foreach (GameObject g in UpgradeObjects)
+        {
+            if (g!= null && g.transform.TransformPoint(g.transform.position).y <= -4.5)
+            {
+                playerManager.GetComponent<PlayerManager>().IncreaseBallCount();
+                Levels.Remove(g);
+                Destroy(g);
+            }
+        }
         InstantiateNewBlocks(blockPos);
-        
+        GameObject bonus = Instantiate(ballUpgrade, bonusPos, Quaternion.identity, Levels[Levels.Count-1].transform) as GameObject;
+        UpgradeObjects.Add(bonus);
+        //Debug.Log(bonus.transform.position);
+        //Debug.Log("created");
     }
 
     void InstantiateNewBlocks(Vector2[] blockPos)
@@ -80,8 +104,9 @@ public class BrickManager : MonoBehaviour {
     {
         currentHiScore = PlayerPrefs.GetInt("hiScore");
         HiScore.text = currentHiScore.ToString();
-
+        playerManager = GameObject.Find("PlayerManager");
         Levels = new List<GameObject>();
+        UpgradeObjects = new List<GameObject>();
         //Levels.Add(Level);
         NextLevel();
     }

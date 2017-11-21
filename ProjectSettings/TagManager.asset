@@ -5,6 +5,9 @@ TagManager:
   serializedVersion: 2
   tags:
   - Ground
+  - Brick
+  - BallCountUpgrade
+  - Ball
   layers:
   - Default
   - TransparentFX
